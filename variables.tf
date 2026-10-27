@@ -9,6 +9,11 @@ Required:
     - subject
 Optional:
     - description
+    - timeouts (block):
+        - create (optional)
+        - delete (optional)
+        - read (optional)
+        - update (optional)
 EOT
 
   type = map(object({
@@ -18,7 +23,21 @@ EOT
     issuer         = string
     subject        = string
     description    = optional(string)
+    timeouts = optional(object({
+      create = optional(string)
+      delete = optional(string)
+      read   = optional(string)
+      update = optional(string)
+    }))
   }))
+  validation {
+    condition = alltrue([
+      for k, v in var.application_federated_identity_credentials : (
+        can(regex("^(/[^/]+/[^/]+)+$", v.application_id))
+      )
+    ])
+    error_message = "must be a valid Azure resource ID"
+  }
   validation {
     condition = alltrue([
       for k, v in var.application_federated_identity_credentials : (
@@ -35,6 +54,5 @@ EOT
     ])
     error_message = "must be between 1 and 120 characters"
   }
-  # Note: 2 additional provider-side validators are enforced at apply time but not mirrored as validation{} blocks here (bespoke or non-mechanically-translatable).
 }
 
